@@ -1,0 +1,61 @@
+# contoh-error.yaml: kesalahan yang disengaja (slide 16 dan 23).
+# Ganti SEMUA nim-24161562003. Hapus setelah selesai (lihat D.3).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: coba-pull, namespace: nim-24161562003 }
+spec:
+  selector: { matchLabels: { app: coba-pull } }
+  template:
+    metadata: { labels: { app: coba-pull } }
+    spec:
+      containers:
+        - name: web
+          image: cc-nim-app:2.1 # tag ini tidak pernah di-kind load
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: coba-oom, namespace: nim-24161562003 }
+spec:
+  selector: { matchLabels: { app: coba-oom } }
+  template:
+    metadata: { labels: { app: coba-oom } }
+    spec:
+      containers:
+        - name: web
+          image: cc-nim-app:1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits: { memory: 8Mi } # lebih kecil dari pemakaian idle
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: coba-pending, namespace: nim-24161562003 }
+spec:
+  selector: { matchLabels: { app: coba-pending } }
+  template:
+    metadata: { labels: { app: coba-pending } }
+    spec:
+      containers:
+        - name: web
+          image: cc-nim-app:1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests: { cpu: "100" } # salah tulis: 100 core, bukan 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: coba-liveness, namespace: nim-24161562003 }
+spec:
+  selector: { matchLabels: { app: coba-liveness } }
+  template:
+    metadata: { labels: { app: coba-liveness } }
+    spec:
+      containers:
+        - name: web
+          image: cc-nim-app:1.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe: # salah alamat: /sehat -> 404
+            httpGet: { path: /sehat, port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 3
